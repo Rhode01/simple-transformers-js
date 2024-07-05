@@ -2,20 +2,22 @@ import React,{useState,useEffect} from 'react';
 import "./app.css"
 const App = () => {
     const [text, setText] = useState("")
-    const [result, setResult] = useState(null)
+    const [result, setResult] = useState([])
     const [showBtn, setshowBtn] = useState(false)
+    const [loading, setloading] = useState(false)
     const worker = new Worker(new URL("./worker.js", import.meta.url) ,{
         type:"module"
     })
     worker.onmessage = (event) =>{
-        const {data} = event
-        setResult(data)
+        const response = event.data
+        setloading(false)
+        setResult(response)
     }
     const callWorker = () => {
+        setloading(true)
         worker.postMessage(text);
     };
     
-
     function handleInputChange(e){
         setText(e.target.value)
         if(text.trim().length >5){
@@ -32,10 +34,15 @@ const App = () => {
            </textarea>
            <div className='results'>
               <span className='result'>
-                {result && <p>{result}</p>}
+                {result.length > 0 && result.map((res,index)=>(
+                    <span key={index}>
+                        <p>label:  {res.label}</p>
+                        <p> score: {res.score}</p>
+                    </span>
+                ))}
               </span>
            </div>
-            {showBtn && <button className='btn' onClick={callWorker}>Send</button>}
+            {showBtn && loading ? ""  : <button className='btn' onClick={callWorker}>Send</button>}
         </div>
     );
 };
